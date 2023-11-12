@@ -1,16 +1,32 @@
 # Skip initial lines, set separator, manually set column names, read/store the data
-data <- read.table("Energy_blend_rawdata2784724ts.sec", 
-                   sep = "\t", 
-                   skip = 4, 
-                   header = FALSE, 
-                   col.names = c("UnixTime", "Price", "TimeInserted", "EntryID", "Volume"))
+#TSAT dont work here because i think its personalised library used by the  professor 
+#so i got it from his github to work with it 
+
+install.packages("remotes")
+remotes::install_github("Mthrun/TSAT")
+library(TSAT)
+#Please change the directory based on what you have :))
+
+File = ReadTS(FileName = "Energy_blend_rawdata2784724ts", InDirectory = "C:/Users/Dell1/Downloads")
+
+#data <- read.table("Energy_blend_rawdata2784724ts.ts",  sep = "\t", skip = 4, header = FALSE, col.names = c("UnixTime", "Price", "TimeInserted", "EntryID", "Volume"))
+
+#splitting the columns
+
+File$Series[1:7,]
+File$FurtherTexts[1:7,]
+Prices = File$Series[,2]
+UnixTime =File$Series[,1]
+UnixTime1= order(File$Series[,1])
 
 #View Structure
-str(data)
+str(File)
+#removing duplicated indexes
+Uniqueindexes= which(!duplicated(x = UnixTime1))
+##########################################################
 
 # Filter NaN values
-data_cleaned <- data %>%
-  filter(!is.na(UnixTime) & !is.na(Price))
+data_cleaned <- File %>%filter(!is.na(UnixTime) & !is.na(Price))
 
 # Create a copy of the original data
 data_TimeConverted = data_cleaned
