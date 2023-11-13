@@ -36,3 +36,23 @@ filtered_data <- combined_data %>%
   ) %>%
   # Remove the grouping structure from the data.
   ungroup()
+
+
+# Convert UnixTime from seconds since epoch to actual date-time in UTC, then convert to Date format.
+filtered_data <- filtered_data %>%
+  mutate(Date = as.Date(as.POSIXct(UnixTime, origin = "1970-01-01", tz = "UTC")))
+
+# Group the data by the new Date column to perform operations on each day's data.
+daily_data <- filtered_data %>%
+  group_by(Date) %>%
+  summarise(
+    # Get the opening price and volume (first entries of the day)
+    OpeningPrice = first(Price),
+    OpeningVolume = first(Volume),
+    # Get the closing price and volume (last entries of the day)
+    ClosingPrice = last(Price),
+    ClosingVolume = last(Volume)
+  ) %>%
+  # Remove the group by structure from the data to return it to a regular dataframe.
+  ungroup()
+
