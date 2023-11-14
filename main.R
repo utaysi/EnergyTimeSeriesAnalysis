@@ -10,12 +10,13 @@ if (!requireNamespace("TSAT", quietly = TRUE)) {
   install.packages("remotes")
   remotes::install_github("Mthrun/TSAT")
 }
+
 library(TSAT)
 
 # Read the time series data from file using the ReadTS function
 # Make sure to change the original filename to "Energy_blend_rawdata2784724.ts"
 # Change the name of your directory
-ur_file_dir <- "C:/Users/evaqw/Pictures/UniMarburg/DM/EnergyTimeSeriesAnalysis-master/EnergyTimeSeriesAnalysis-master"
+ur_file_dir <- "C:/Users/elmop/Downloads"
 File <- ReadTS(FileName = "Energy_blend_rawdata2784724", InDirectory = ur_file_dir)
 
 # Combine 'Series' and 'FurtherTexts' from File into a single dataframe
@@ -108,7 +109,7 @@ daily_data <- filtered_data %>%
   ungroup()
 
 # Change name of your output directory
-out_directory <- "C:/Users/evaqw/Pictures/UniMarburg/DM/EnergyTimeSeriesAnalysis-master/EnergyTimeSeriesAnalysis-master"
+out_directory <- "C:/Users/elmop/Downloads"
 
 # Save the univariate time series (all dataset) in daily resolution using WriteDates 
 # as .csv with first column in Date format
@@ -147,3 +148,57 @@ TSAT::WriteTS(FileName = "ts_closing_volume",
 preprocessed_data <- ReadTS(FileName = "ts_opening_price", 
                             InDirectory = out_directory)
 
+
+
+
+
+
+# Compute MSM distance between two time series, c = cost parameter
+msmDist <- function(ts1, ts2, c) {
+  m <- length(ts1)
+  n <- length(ts2)
+  
+  # Extend the time series adding a first entry set to infinity
+  ts1 <- c(Inf, ts1)
+  ts2 <- c(Inf, ts2)
+  
+  # Initialize the temporary array to infinity
+  tmpArray <- rep(Inf, n + 1)
+  
+  # calculate cost of Split/Merge operation
+  C <- function(new_point, x, y, c) {
+    #new_point point to merge/ split to
+    #x         xcoord
+    #y         ycoord
+    if (new_point < min(x, y) || new_point > max(x, y)) {
+      return(c + min(abs(new_point - x), abs(new_point - y)))
+    }
+    return(c)
+  }
+  
+  # Initialize the temporary value to 0
+  tmp <- 0
+  # Main loop to compute MSM distance
+  for (i in 2:(m + 1)) { #start at 2nd index in array, to refer to the first position [1] in the time series we refer to j-1
+    
+    for (j in 2:(n + 1)) {
+      d1 <- tmp + abs(ts1[i] - ts2[j]) 
+      d2 <- tmpArray[j] + C(ts1[i], ts1[i - 1], ts2[j], c)
+      d3 <- tmpArray[j - 1] + C(ts2[j], ts1[i], ts2[j - 1], c)
+
+      
+      # Store old entry before overwriting
+      tmp <- tmpArray[j]
+      tmpArray[j] <- min(c(d1, d2, d3))
+    }
+    # After last entry in row set to inf, otherwise the move cost for the first entry in the next row are wrong
+    tmp <- Inf
+  }
+  
+  return(tmpArray[n + 1])
+}
+
+#testing
+a = daily_data$OpeningPrice
+b = daily_data$ClosingPrice
+#msmDist(a[1:(length(a) - 1)],b[1:(length(b) - 1)],1) #running this took like 10 mins
