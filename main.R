@@ -1,23 +1,7 @@
-
-# Install the dplyr package if not installed
-if (!requireNamespace("dplyr", quietly = TRUE)) {
-  install.packages("dplyr")
-}
-library(dplyr)
-
-# Install the TSAT package if not installed
-if (!requireNamespace("TSAT", quietly = TRUE)) {
-  install.packages("remotes")
-  remotes::install_github("Mthrun/TSAT")
-}
-
-library(TSAT)
-
+### Place the data file in the root project folder and make sure it is named "Energy_blend_rawdata2784724.ts". 
+### Please do not alter the code to your own system directory so it can work on every member's system without modification!
 # Read the time series data from file using the ReadTS function
-# Make sure to change the original filename to "Energy_blend_rawdata2784724.ts"
-# Change the name of your directory
-ur_file_dir <- "C:/Users/elmop/Downloads"
-File <- ReadTS(FileName = "Energy_blend_rawdata2784724", InDirectory = ur_file_dir)
+File = ReadTS(FileName = "Energy_blend_rawdata2784724") 
 
 # Combine 'Series' and 'FurtherTexts' from File into a single dataframe
 combined_data <- as.data.frame(cbind(File$Series, File$FurtherTexts))
@@ -108,8 +92,8 @@ daily_data <- filtered_data %>%
   # Remove the group by structure from the data to return it to a regular dataframe.
   ungroup()
 
-# Change name of your output directory
-out_directory <- "C:/Users/elmop/Downloads"
+# Set the out_directory to project root path. 
+out_directory <- getwd()
 
 # Save the univariate time series (all dataset) in daily resolution using WriteDates 
 # as .csv with first column in Date format
