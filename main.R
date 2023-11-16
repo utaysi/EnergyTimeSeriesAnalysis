@@ -187,10 +187,8 @@ a = daily_data$OpeningPrice
 b = daily_data$ClosingPrice
 #msmDist(a[1:(length(a) - 1)],b[1:(length(b) - 1)],1) #running this took like 10 mins
 
-# Assuming daily_data$Date currently holds numeric Unix time (seconds since the epoch)
+# Convert Unix Time format daily_data$Date values into POSIXct objects, so plot_ly can interpret them. 
 daily_data$Date <- as.POSIXct(daily_data$Date, origin = "1970-01-01", tz = "UTC")
-
-# Now daily_data$Date should be a POSIXct object, which plot_ly can interpret correctly
 # Combined plot for Opening and Closing Prices
 combined_plot <- plot_ly(data = daily_data, x = ~Date, y = ~OpeningPrice, type = 'scatter', mode = 'lines', name = 'Opening Prices') %>%
   add_trace(y = ~ClosingPrice, mode = 'lines', name = 'Closing Prices', line = list(color = 'red')) %>%

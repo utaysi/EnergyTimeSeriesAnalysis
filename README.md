@@ -2,5 +2,5 @@
 
 
 ## Usage
-- Clone the repository and place the data file in the root project folder with the appropriate name.
-- Run setup.R and main.R in order.
+- Place the data file within the root project folder with the exact name “Energy_blend_rawdata2784724.ts”.
+- First run “setup.R”, then “main.R”. 
