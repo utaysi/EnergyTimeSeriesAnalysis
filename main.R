@@ -3,6 +3,13 @@
 # Read the time series data from file using the ReadTS function
 File = ReadTS(FileName = "Energy_blend_rawdata2784724") 
 
+# Convert the 'UnixTime' from the 'Series' part of File to POSIXct with the Chicago timezone then convert to UTC.
+File$Series[, 1] <- as.POSIXct(File$Series[, 1], origin = "1970-01-01", tz = "America/Chicago")
+File$Series[, 1] <- with_tz(File$Series[, 1], tzone = "UTC")
+
+# Convert the 'UnixTime' to numeric UTC timestamps
+File$Series[, 1] <- as.numeric(File$Series[, 1])
+
 # Combine 'Series' and 'FurtherTexts' from File into a single dataframe
 combined_data <- as.data.frame(cbind(File$Series, File$FurtherTexts))
 
