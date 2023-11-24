@@ -50,3 +50,10 @@ rsconnect/
 
 #Data File which exceeds Github's 100MB limit
 Energy_blend_rawdata2784724.ts
+
+#Output files
+preprocessed_data.csv
+ts_closing_price.ts
+ts_closing_volume.ts
+ts_opening_price.ts
+ts_opening_volume.ts
