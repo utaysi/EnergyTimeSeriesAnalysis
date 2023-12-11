@@ -117,3 +117,24 @@ ggplot() +
   geom_line(data = plot_data, aes(x = Date, y = ClosingPrice), color = "blue") +
   geom_line(data = forecasts, aes(x = Date, y = Forecast), color = "red") +
   labs(title = "Actual vs Forecasted Closing Prices", x = "Date", y = "Closing Price")
+
+
+
+
+#-----------TESTING BELOW----------
+
+
+
+#Interactive plot test
+# Create the ggplot object with actual data in blue and forecasts in red
+ggplot_object <- ggplot() +
+  geom_line(data = plot_data, aes(x = Date, y = ClosingPrice), color = "blue") +
+  geom_line(data = forecasts, aes(x = Date, y = Forecast), color = "red") +
+  labs(title = "Actual vs Forecasted Closing Prices", x = "Date", y = "Closing Price")
+
+# Convert the ggplot object to a plotly object for interactivity
+interactive_plot <- ggplotly(ggplot_object)
+
+# Display the interactive plot in the Viewer pane
+interactive_plot
+
