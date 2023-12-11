@@ -26,6 +26,8 @@ install.packages('prophet')
 install.packages('doSNOW')
 install.packages('foreach')
 install.packages('plyr')
+install.packages('doParallel')
+
 
 # Load the required libraries
 library(plyr)  # For data manipulation
