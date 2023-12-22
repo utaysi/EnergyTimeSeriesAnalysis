@@ -100,7 +100,7 @@ forecasts_Auto_arima <- foreach(k = 1:K, .combine=rbind, .packages = 'forecast')
   cat(sprintf("\rProgress: %d/%d", k, K))
   
   # Return the forecast for the last day
-  data.frame(Date = time(tail(forecast_arima$mean, 1)), Forecast = tail(forecast_arima$mean, 1))
+  data.frame(Date = time(tail(forecast_Auto_arima$mean, 1)), Forecast = tail(forecast_Auto_arima$mean, 1))
 }
 
 # Stop the parallel cluster after completing the forecasts
@@ -115,7 +115,7 @@ if (length(actual_values_Auto_arima) == nrow(forecasts_Auto_arima)) {
   errors_Auto_arima <- actual_values_Auto_arima - forecasts_Auto_arima$Forecast
   
   # Calculate the mean of the absolute errors
-  MAE_arima <- mean(abs(errors_Auto_arima), na.rm = TRUE)
+  MAE_Auto_arima <- mean(abs(errors_Auto_arima), na.rm = TRUE)
 } else {
   stop("The number of actual values and forecasts does not match.")
 }
