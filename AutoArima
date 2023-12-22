@@ -158,7 +158,7 @@ data_residuals <- seasonal_diff
 
 data_adjusted <- data_residuals - mean(data_residuals)
 
-#----------- STATIONARITY AND HOMOSCEDASITY --------------
+#----------- STATIONARITY AND HOMOSCEDASTICITY --------------
 
 qqnorm(data_adjusted)
 qqline(data_adjusted)
