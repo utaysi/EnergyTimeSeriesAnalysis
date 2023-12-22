@@ -196,6 +196,7 @@ h <- 1  # Horizon (1 day ahead forecast)
 K <- 1095  # Number of steps to forecast (3 years)
 
 preprocessed_ts <- data_logged
+# preprocessed_ts <- data_price
 
 length_data <- length(preprocessed_ts)
 
@@ -209,22 +210,11 @@ arima_model <- arima(train_data, order=c(p,d,q))
 #----------- RESIDUALS CHECKING ----------------------------------
 
 # Plot residuals against time
-plot(arima_model$residuals, type = "l", main = "Residuals Plot")
+residuals <- arima_model$residuals
+plot(residuals, type = "l", main = "Residuals Plot")
+plot(density(residuals), main = "Density Plot of Residuals", xlab = "Residuals")
 
 #----------- FORECASTING -----------------------------------------
-# 
-# for (k in 1:10) {
-#   # Define the training set up to point t+k
-#   train_data <- preprocessed_ts[1:(length_data - K + k - 1)]
-#   
-#   # Fit the ARIMA model
-#   model <- arima(train_data, order=c(p,d,q))
-#   
-#   # Generate the forecast for the future date
-#   forecast <- predict(model, h)
-#   
-#   print()
-# }
 
 # Initialize a parallel backend using available CPU cores
 cl <- makeCluster(detectCores() - 1)  # Use all cores except one
@@ -261,17 +251,26 @@ errors <- actual_values - forecasts$Forecast
 MAE <- mean(abs(errors), na.rm = TRUE)
 
 # Visualize the actual vs forecasted values using ggplot2
-forecast_dates <- as.Date(forecasts$Date)
-plot_data <- subset(daily_data, Date %in% forecast_dates)
+plot <- plot_ly()
+plot <- add_trace(plot, x=data_time[(length_data-K+1):length_data], y=actual_values, name = "Original", type = 'scatter', mode = 'lines', line = list(width = line_width-0.3))
+plot <- add_trace(plot, x=data_time[(length_data-K+1):length_data], y=forecasts$Forecast, name = "Forecasted", type = 'scatter', mode = 'lines', line = list(width =line_width ))
+plot <- layout(plot, 
+               title = "Detrending of data",
+               xaxis = list(title = "Time"),
+               yaxis = list(title = "Price"))
+plot
 
-# Create the plot with actual data in blue and forecasts in red
-ggplot() +
-  geom_line(data = plot_data, aes(x = Date, y = ClosingPrice), color = "blue") +
-  geom_line(data = forecasts, aes(x = Date, y = Forecast), color = "red") +
-  labs(title = "Actual vs Forecasted Closing Prices", x = "Date", y = "Closing Price")
+# Calculate the cumulative MAE for each forecast step
+cumulative_mae <- cumsum(abs(errors))/1:K
 
-plot(actual_values, type = "l", col = "blue")
-lines(forecasts$Forecast, col = "red")
-legend("topright", legend = c("Actual", "Forecasted"), col = c("blue", "red"), lty = 1, lwd = 1)
+# Create a plot of cumulative MAE over time
+ggplot(data = data.frame(Step = 1:K, CumulativeMAE = cumulative_mae), aes(x = Step, y = CumulativeMAE)) +
+  geom_line(color = "blue") +
+  labs(title = "Cumulative MAE Over Time", x = "Forecast Step", y = "Cumulative MAE")
+#--------
+# Calculate residuals
+residuals <- actual_values - forecasts$Forecast
 
-
+# Q-Q plot of residuals
+qqnorm(residuals)
+qqline(residuals, col = "red")
