@@ -1,1 +1,132 @@
+# Install necessary packages if not already installed
+install.packages('forecast')
+install.packages('doParallel')
+install.packages('doSNOW')
+install.packages('foreach')
+install.packages('plyr')
+# Install necessary packages
+install.packages(c("forecast", "tseries"))
+install.packages("zoo")
+install.packages('doSNOW')
+install.packages('foreach')
+install.packages('plyr')
+install.packages('doParallel')
+
+# Load the required libraries
+library(zoo)
+library(forecast)
+library(tseries)
+library(doSNOW)  # For parallel processing with a snow-type backend
+library(foreach)  # For looping in parallel
+library(plyr)  # For data manipulation
+library(doParallel)  # For parallel processing
+
+#----------------- LOADING DATA ---------------------------
+
+# Prepare the data for forecasting with Auto-ARIMA
+# 'daily_data' is the original dataframe with 'Date' and 'ClosingPrice' columns
+Auto_arima_data <- data.frame(ds = daily_data$Date, y = daily_data$ClosingPrice)
+plot(x=Auto_arima_data$ds, y=Auto_arima_data$y, type='l', 
+     main="Closing price time series", xlab="Time", ylab="Price")
+
+#----------------- FILL MISSING VALUES ---------------------------
+
+# Finding missing values and its position
+print(paste("Number of missing values:", sum(is.na(Auto_arima_data$y))))
+print(paste("Missing values Indexes:", which(is.na(Auto_arima_data$y), arr.ind = TRUE)))
+
+# Removing missing values (we checked and there is only 1 missing value)
+Auto_arima_data <- Auto_arima_data[0:(length(Auto_arima_data$y)-1),0:2]
+print(paste("Number of missing values:", sum(is.na(Auto_arima_data$y))))
+
+#----------------- CHECK OUTLIERS ---------------------------
+
+# Finding values, that are equal to or less than 0 as they don't make sense to have
+# negative values and we consider them to be Outliers.
+print(paste("Number of values less then 0:", sum(Auto_arima_data$y < 0)))
+outliers_ind <- which(Auto_arima_data$y < 0, arr.ind = TRUE)
+print(paste("the outlier index is:", outliers_ind))
+
+# Fill values, which are equal to or less than 0, with the previous value (1 value)
+Auto_arima_data[outliers_ind,]$y <- Auto_arima_data[outliers_ind-1,]$y
+print(paste("Number of values less then 0:", sum(Auto_arima_data$y < 0)))
+
+#----------- DETERENDING DATA --------------
+
+data_time <- Auto_arima_data$ds
+data_price <- Auto_arima_data$y
+
+#     POLYNOMIAL
+# Choose the degree of the polynomial = 3
+degree <- 3
+# Fit a polynomial regression model
+poly_model_3 <- lm(data_price ~ poly(index(data_price), degree, raw = TRUE))
+# Detrend the time series
+detrended_ts_poly_3 <- residuals(poly_model_3)
+# Choose the degree of the polynomial = 10
+degree <- 10
+# Fit a polynomial regression model
+poly_model_10 <- lm(data_price ~ poly(index(data_price), degree, raw = TRUE))
+# Detrend the time series
+detrended_ts_poly_10 <- residuals(poly_model_10)
+
+# Load the required libraries
+library(forecast)  # For time series forecasting
+library(doParallel)  # For parallel processing
+
+# Prepare the data for forecasting
+Auto_arima_data <- ts(daily_data$ClosingPrice, frequency = 365)
+
+# Set the forecasting parameters
+h <- 1  # Horizon (1 day ahead forecast)
+K <- 1095  # Number of steps to forecast (3 years)
+
+# Initialize a parallel backend using available CPU cores
+cl <- makeCluster(detectCores() - 1)  # Use all cores except one
+registerDoParallel(cl)
+
+# Perform the rolling window forecast in parallel using Auto ARIMA
+forecasts_Auto_arima <- foreach(k = 1:K, .combine=rbind, .packages = 'forecast') %dopar% {
+  # Define the training set up to point t+k
+  train_data <- window(Auto_arima_data, end = length(Auto_arima_data) - K + k - 1)
+  
+  # Fit the Auto ARIMA model
+  model_Auto_arima <- auto.arima(train_data)
+  
+  # Generate the forecast for the future date
+  forecast_Auto_arima <- forecast(model_Auto_arima, h = h)
+  
+  # Output progress in the console
+  cat(sprintf("\rProgress: %d/%d", k, K))
+  
+  # Return the forecast for the last day
+  data.frame(Date = time(tail(forecast_arima$mean, 1)), Forecast = tail(forecast_arima$mean, 1))
+}
+
+# Stop the parallel cluster after completing the forecasts
+stopCluster(cl)
+
+# Extract the actual closing prices corresponding to the forecasted dates
+actual_values_Auto_arima <- tail(daily_data$ClosingPrice, n = K)
+
+# Calculate the Mean Absolute Error (MAE) between forecasts and actual values
+if (length(actual_values_Auto_arima) == nrow(forecasts_Auto_arima)) {
+  # Compute the error for each forecasted value
+  errors_Auto_arima <- actual_values_Auto_arima - forecasts_Auto_arima$Forecast
+  
+  # Calculate the mean of the absolute errors
+  MAE_arima <- mean(abs(errors_Auto_arima), na.rm = TRUE)
+} else {
+  stop("The number of actual values and forecasts does not match.")
+}
+
+# Visualize the actual vs forecasted values using ggplot2
+forecast_dates_Auto_arima <- as.Date(forecasts_Auto_arima$Date)
+plot_data_Auto_arima <- subset(daily_data, Date %in% forecast_dates_Auto_arima)
+
+# Create the plot with actual data in blue and forecasts in red
+ggplot() +
+  geom_line(data = plot_data_Auto_arima, aes(x = Date, y = ClosingPrice), color = "blue") +
+  geom_line(data = forecasts_Auto_arima, aes(x = Date, y = Forecast), color = "red") +
+  labs(title = "Actual vs Forecasted Closing Prices (Auto ARIMA)", x = "Date", y = "Closing Price")
 
