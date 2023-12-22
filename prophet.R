@@ -140,3 +140,22 @@ interactive_plot <- ggplotly(ggplot_object)
 # Display the interactive plot in the Viewer pane
 interactive_plot
 
+#-------------------------------------
+#New Visualizations
+#-------------------------------------
+
+# Calculate the cumulative MAE for each forecast step
+cumulative_mae <- cumsum(abs(errors))/1:K
+
+# Create a plot of cumulative MAE over time
+ggplot(data = data.frame(Step = 1:K, CumulativeMAE = cumulative_mae), aes(x = Step, y = CumulativeMAE)) +
+  geom_line(color = "blue") +
+  labs(title = "Cumulative MAE Over Time", x = "Forecast Step", y = "Cumulative MAE")
+#--------
+# Calculate residuals
+residuals <- actual_values - forecasts$Forecast
+
+# Q-Q plot of residuals
+qqnorm(residuals)
+qqline(residuals, col = "red")
+
