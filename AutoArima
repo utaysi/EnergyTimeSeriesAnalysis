@@ -1,9 +1,3 @@
-# Install necessary packages if not already installed
-install.packages('forecast')
-install.packages('doParallel')
-install.packages('doSNOW')
-install.packages('foreach')
-install.packages('plyr')
 # Install necessary packages
 install.packages(c("forecast", "tseries"))
 install.packages("zoo")
@@ -23,38 +17,37 @@ library(doParallel)  # For parallel processing
 
 #----------------- LOADING DATA ---------------------------
 
-# Prepare the data for forecasting with Auto-ARIMA
+# Prepare the data for forecasting with Auto ARIMA
 # 'daily_data' is the original dataframe with 'Date' and 'ClosingPrice' columns
-Auto_arima_data <- data.frame(ds = daily_data$Date, y = daily_data$ClosingPrice)
-plot(x=Auto_arima_data$ds, y=Auto_arima_data$y, type='l', 
+auto_arima_data <- data.frame(ds = daily_data$Date, y = daily_data$ClosingPrice)
+plot(x=auto_arima_data$ds, y=auto_arima_data$y, type='l', 
      main="Closing price time series", xlab="Time", ylab="Price")
 
 #----------------- FILL MISSING VALUES ---------------------------
 
 # Finding missing values and its position
-print(paste("Number of missing values:", sum(is.na(Auto_arima_data$y))))
-print(paste("Missing values Indexes:", which(is.na(Auto_arima_data$y), arr.ind = TRUE)))
+print(paste("Number of missing values:", sum(is.na(auto_arima_data$y))))
+print(paste("Missing values Indexes:", which(is.na(auto_arima_data$y), arr.ind = TRUE)))
 
-# Removing missing values (we checked and there is only 1 missing value)
-Auto_arima_data <- Auto_arima_data[0:(length(Auto_arima_data$y)-1),0:2]
-print(paste("Number of missing values:", sum(is.na(Auto_arima_data$y))))
+# Removing missing values (1 missing value)
+auto_arima_data <- auto_arima_data[0:(length(auto_arima_data$y)-1),0:2]
+print(paste("Number of missing values:", sum(is.na(auto_arima_data$y))))
 
 #----------------- CHECK OUTLIERS ---------------------------
 
-# Finding values, that are equal to or less than 0 as they don't make sense to have
-# negative values and we consider them to be Outliers.
-print(paste("Number of values less then 0:", sum(Auto_arima_data$y < 0)))
-outliers_ind <- which(Auto_arima_data$y < 0, arr.ind = TRUE)
-print(paste("the outlier index is:", outliers_ind))
+# Finding values, which are equal to or less than 0
+print(paste("Number of values less then 0:", sum(auto_arima_data$y < 0)))
+outliers_ind <- which(auto_arima_data$y < 0, arr.ind = TRUE)
+print(paste("Outliers Indexes are:", outliers_ind))
 
 # Fill values, which are equal to or less than 0, with the previous value (1 value)
-Auto_arima_data[outliers_ind,]$y <- Auto_arima_data[outliers_ind-1,]$y
-print(paste("Number of values less then 0:", sum(Auto_arima_data$y < 0)))
+auto_arima_data[outliers_ind,]$y <- auto_arima_data[outliers_ind-1,]$y
+print(paste("Number of values less then 0:", sum(auto_arima_data$y < 0)))
 
 #----------- DETERENDING DATA --------------
 
-data_time <- Auto_arima_data$ds
-data_price <- Auto_arima_data$y
+data_time <- auto_arima_data$ds
+data_price <- auto_arima_data$y
 
 #     POLYNOMIAL
 # Choose the degree of the polynomial = 3
@@ -70,63 +63,204 @@ poly_model_10 <- lm(data_price ~ poly(index(data_price), degree, raw = TRUE))
 # Detrend the time series
 detrended_ts_poly_10 <- residuals(poly_model_10)
 
-# Load the required libraries
-library(forecast)  # For time series forecasting
-library(doParallel)  # For parallel processing
 
-# Prepare the data for forecasting
-Auto_arima_data <- ts(daily_data$ClosingPrice, frequency = 365)
+#    MOVING AVERAGE
+# Choose windows size = 10
+window_size <- 10
+ma_smoothed_ts_10 <- stats::filter(data_price, rep(1/window_size, window_size), sides = 2)
+detrended_ts_ma_10 <- data_price - ma_smoothed_ts_10
+# Choose windows size = 50
+window_size <- 50
+ma_smoothed_ts_50 <- stats::filter(data_price, rep(1/window_size, window_size), sides = 2)
+detrended_ts_ma_50 <- data_price - ma_smoothed_ts_50
+# Choose windows size = 365
+window_size <- 150
+ma_smoothed_ts_365 <- stats::filter(data_price, rep(1/window_size, window_size), sides = 2)
+detrended_ts_ma_365 <- data_price - ma_smoothed_ts_365
 
-# Set the forecasting parameters
+
+# LOWESS
+# lowess_smoothed_ts_66 <- lowess(data_price, f = 2/3)
+# detrended_ts_lowess_66 <- data_price - lowess_smoothed_ts_66$y
+lowess_smoothed_ts_1 <- lowess(data_price, f = 0.01)
+detrended_ts_lowess_1 <- lowess_smoothed_ts_1$y - data_price
+
+# Plotting trend
+line_width <- 0.8
+plot <- plot_ly()
+plot <- add_trace(plot, x=data_time, y=data_price, name = "Original", type = 'scatter', mode = 'lines', line = list(width = 0.2))
+plot <- add_trace(plot, x=data_time[0:length(poly_model_3$fitted.values)], y=poly_model_3$fitted.values, name = "Polynomial_3", type = 'scatter', mode = 'lines', line = list(width = line_width ))
+plot <- add_trace(plot, x=data_time[0:length(poly_model_10$fitted.values)], y=poly_model_10$fitted.values, name = "Polynomial_10", type = 'scatter', mode = 'lines', line = list(width = line_width ))
+plot <- add_trace(plot, x=data_time, y=ma_smoothed_ts_10, name = "Moving average_10", type = 'scatter', mode = 'lines', line = list(width = line_width ))
+plot <- add_trace(plot, x=data_time, y=ma_smoothed_ts_50, name = "Moving average_50", type = 'scatter', mode = 'lines', line = list(width = line_width ))
+plot <- add_trace(plot, x=data_time, y=ma_smoothed_ts_365, name = "Moving average_365", type = 'scatter', mode = 'lines', line = list(width = line_width ))
+# plot <- add_trace(plot, x=data_time, y=lowess_smoothed_ts_66$y, name = "LOWESS_66", type = 'scatter', mode = 'lines', line = list(width =line_width ))
+plot <- add_trace(plot, x=data_time, y=lowess_smoothed_ts_1$y, name = "LOWESS_1", type = 'scatter', mode = 'lines', line = list(width =line_width ))
+plot <- layout(plot,
+               title = "Detrending of data",
+               xaxis = list(title = "Time"),
+               yaxis = list(title = "Price"))
+plot
+
+# Plotting detrended data
+plot <- plot_ly()
+plot <- add_trace(plot, x=data_time, y=data_price, name = "Original", type = 'scatter', mode = 'lines', line = list(width = line_width-0.3))
+plot <- add_trace(plot, x=data_time[0:length(poly_model_3$fitted.values)], y=detrended_ts_poly_10, name = "Detrended (Polynomial_10)", type = 'scatter', mode = 'lines', line = list(width = line_width ))
+plot <- add_trace(plot, x=data_time, y=detrended_ts_ma_50, name = "Detrended (MA_50)", type = 'scatter', mode = 'lines', line = list(width = line_width ))
+plot <- add_trace(plot, x=data_time, y=detrended_ts_lowess_1, name = "Detrended (LOWESS)", type = 'scatter', mode = 'lines', line = list(width =line_width ))
+plot <- layout(plot, 
+               title = "Detrending of data",
+               xaxis = list(title = "Time"),
+               yaxis = list(title = "Price"))
+plot
+
+data_detrended <- detrended_ts_lowess_1
+data_detrended <- data_detrended - rep(min(data_detrended), length(data_detrended))
+
+plot <- plot_ly()
+plot <- add_trace(plot, x=data_time, y=data_price, name = "Original", type = 'scatter', mode = 'lines', line = list(width = line_width-0.3))
+plot <- add_trace(plot, x=data_time, y=data_detrended, name = "Detrended (LOWESS)", type = 'scatter', mode = 'lines', line = list(width =line_width ))
+plot <- layout(plot, 
+               title = "Detrending of data",
+               xaxis = list(title = "Time"),
+               yaxis = list(title = "Price"))
+plot
+
+#----------- ADJUCT SAISONALITY --------------
+#  
+# # Seasonal decomposition using stl (no seasonality observed)
+# stl_decomposition <- stl(data_detrended, s.window = "periodic")
+# deseasonalized_ts <- seasadj(data_detrended)
+
+# Seasonal Differentiating
+seasonal_diff <- diff(data_detrended, lag = 12)
+
+# Plotting
+plot <- plot_ly()
+plot <- add_trace(plot, x=data_time, y=data_price,
+                  name = "Original", type = 'scatter', mode = 'lines',
+                  line = list(width = line_width ))
+plot <- add_trace(plot, x=data_time[0:length(data_detrended)], y=data_detrended,
+                  name = "Detrended", type = 'scatter', mode = 'lines',
+                  line = list(width = line_width))
+plot <- add_trace(plot, x=data_time[0:length(seasonal_diff)], y=seasonal_diff,
+                  name = "Seasonality djusted", type = 'scatter', mode = 'lines',
+                  line = list(width = line_width))
+plot <- layout(plot,
+               title = "Adjusting seasonality of data",
+               xaxis = list(title = "Time"),
+               yaxis = list(title = "Price"))
+plot
+
+data_residuals <- seasonal_diff
+
+#----------- ADJUCT MEAN --------------
+
+data_adjusted <- data_residuals - mean(data_residuals)
+
+#----------- STATIONARITY AND HOMOSCEDASITY --------------
+
+qqnorm(data_adjusted)
+qqline(data_adjusted)
+plot(density(data_adjusted), main = "Density Plot of Residuals", xlab = "Residuals")
+
+data_logged <- sign(data_adjusted) * log(abs(data_adjusted))
+
+qqnorm(data_logged)
+qqline(data_logged)
+plot(density(data_logged), main = "Density Plot of Residuals", xlab = "Residuals")
+
+lag_max <- 200
+acf_result <- acf(data_logged, lag_max, main = "ACF")
+pacf_result <- pacf(data_logged, lag_max, main = "PACF")
+print(adf.test(data_logged))
+
+#----------- Auto ARIMA MODEL TRAINING -----------------------------------------
+
+# Choosing differentiate order
+d <- 0
+
+# Identifying rolling-window parameters
 h <- 1  # Horizon (1 day ahead forecast)
 K <- 1095  # Number of steps to forecast (3 years)
+
+preprocessed_ts <- data_logged
+# preprocessed_ts <- data_price
+
+length_data <- length(preprocessed_ts)
+
+# Train-test data splitting
+train_data <- preprocessed_ts[0:(length_data-K+1)]
+test_data <- preprocessed_ts[(length_data-K+1):length_data]
+
+# Training model
+# auto_arima_model <- auto_arima(train_data, order=c(p,d,q))
+auto_arima_model <- auto.arima(train_data, max.p=6, max.q=6, max.d=0)
+
+#----------- RESIDUALS CHECKING ----------------------------------
+
+# Plot residuals against time
+residuals <- auto_arima_model$residuals
+plot(residuals, type = "l", main = "Residuals Plot")
+plot(density(residuals), main = "Density Plot of Residuals", xlab = "Residuals")
+
+#----------- FORECASTING -----------------------------------------
 
 # Initialize a parallel backend using available CPU cores
 cl <- makeCluster(detectCores() - 1)  # Use all cores except one
 registerDoParallel(cl)
 
-# Perform the rolling window forecast in parallel using Auto ARIMA
-forecasts_Auto_arima <- foreach(k = 1:K, .combine=rbind, .packages = 'forecast') %dopar% {
+# Perform the rolling window forecast in parallel
+forecasts <- foreach(k = 1:K, .combine=rbind, .packages = 'forecast') %dopar% {
   # Define the training set up to point t+k
-  train_data <- window(Auto_arima_data, end = length(Auto_arima_data) - K + k - 1)
+  train_data <- preprocessed_ts[1:(length_data - K + k - 1)]
   
-  # Fit the Auto ARIMA model
-  model_Auto_arima <- auto.arima(train_data)
+  # Fit the ARIMA model
+  model <- arima(train_data, order=c(1,d,1))
   
   # Generate the forecast for the future date
-  forecast_Auto_arima <- forecast(model_Auto_arima, h = h)
+  forecast <- predict(model, h)
   
-  # Output progress in the console
-  cat(sprintf("\rProgress: %d/%d", k, K))
-  
-  # Return the forecast for the last day
-  data.frame(Date = time(tail(forecast_Auto_arima$mean, 1)), Forecast = tail(forecast_Auto_arima$mean, 1))
+  # Return the forecast for the last day in the future dataframe
+  data.frame(Date = start(forecast$pred)[1], 
+             Forecast = forecast$pred[1])
 }
 
 # Stop the parallel cluster after completing the forecasts
 stopCluster(cl)
 
+#----------- EVALUATION -----------------------------------------
+
 # Extract the actual closing prices corresponding to the forecasted dates
-actual_values_Auto_arima <- tail(daily_data$ClosingPrice, n = K)
+actual_values <- tail(daily_data$ClosingPrice, n = K)
 
 # Calculate the Mean Absolute Error (MAE) between forecasts and actual values
-if (length(actual_values_Auto_arima) == nrow(forecasts_Auto_arima)) {
-  # Compute the error for each forecasted value
-  errors_Auto_arima <- actual_values_Auto_arima - forecasts_Auto_arima$Forecast
-  
-  # Calculate the mean of the absolute errors
-  MAE_Auto_arima <- mean(abs(errors_Auto_arima), na.rm = TRUE)
-} else {
-  stop("The number of actual values and forecasts does not match.")
-}
+# Compute the error for each forecasted value
+errors <- actual_values - forecasts$Forecast
+# Calculate the mean of the absolute errors
+MAE <- mean(abs(errors), na.rm = TRUE)
 
 # Visualize the actual vs forecasted values using ggplot2
-forecast_dates_Auto_arima <- as.Date(forecasts_Auto_arima$Date)
-plot_data_Auto_arima <- subset(daily_data, Date %in% forecast_dates_Auto_arima)
+plot <- plot_ly()
+plot <- add_trace(plot, x=data_time[(length_data-K+1):length_data], y=actual_values, name = "Original", type = 'scatter', mode = 'lines', line = list(width = line_width-0.3))
+plot <- add_trace(plot, x=data_time[(length_data-K+1):length_data], y=forecasts$Forecast, name = "Forecasted", type = 'scatter', mode = 'lines', line = list(width =line_width ))
+plot <- layout(plot, 
+               title = "Detrending of data",
+               xaxis = list(title = "Time"),
+               yaxis = list(title = "Price"))
+plot
 
-# Create the plot with actual data in blue and forecasts in red
-ggplot() +
-  geom_line(data = plot_data_Auto_arima, aes(x = Date, y = ClosingPrice), color = "blue") +
-  geom_line(data = forecasts_Auto_arima, aes(x = Date, y = Forecast), color = "red") +
-  labs(title = "Actual vs Forecasted Closing Prices (Auto ARIMA)", x = "Date", y = "Closing Price")
+# Calculate the cumulative MAE for each forecast step
+cumulative_mae <- cumsum(abs(errors))/1:K
 
+# Create a plot of cumulative MAE over time
+ggplot(data = data.frame(Step = 1:K, CumulativeMAE = cumulative_mae), aes(x = Step, y = CumulativeMAE)) +
+  geom_line(color = "blue") +
+  labs(title = "Cumulative MAE Over Time", x = "Forecast Step", y = "Cumulative MAE")
+#--------
+# Calculate residuals
+residuals <- actual_values - forecasts$Forecast
+
+# Q-Q plot of residuals
+qqnorm(residuals)
+qqline(residuals, col = "red")
