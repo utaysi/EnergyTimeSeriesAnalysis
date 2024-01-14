@@ -1,0 +1,153 @@
+# Country list from Leister 2016		
+#Country	isocode	Land
+% 	150	
+1	AFG	 Afghanistan 
+2	AGO	 Angola 
+3	ALB	 Albania 
+5	ARG	 Argentina 
+7	ATG	 Antigua and Barbuda 
+8	AUS	 Australia 
+9	AUT	 Austria 
+11	BDI	 Burundi 
+12	BEL	 Belgium 
+13	BEN	 Benin 
+14	BFA	 Burkina Faso 
+15	BGD	 Bangladesh 
+16	BGR	 Bulgaria 
+18	BHS	 Bahamas 
+21	BLZ	 Belize 
+22	BMU	 Bermuda 
+23	BOL	 Bolivia 
+24	BRA	 Brazil 
+25	BRB	 Barbados 
+27	BTN	 Bhutan 
+28	BWA	 Botswana  
+29	CAF	 Central African Republic 
+30	CAN	 Canada  
+32	CHE	 Switzerland 
+33	CHL	 Chile 
+34	CHN	 China 
+35	CIV	 Cote d`Ivoire 
+36	CMR	 Cameroon 
+37	COG	" Congo, Republic of "
+38	COL	 Colombia 
+39	COM	 Comoros 
+40	CPV	 Cape Verde 
+41	CRI	 Costa Rica 
+42	CUB	 Cuba
+43	CYP	 Cyprus 
+45	DJI	 Djibouti 
+46	DMA	 Dominica 
+47	DNK	 Denmark 
+48	DOM	 Dominican Republic 
+49	DZA	 Algeria 
+50	ECU	 Ecuador
+51	EGY	 Egypt 
+53	ESP	 Spain  
+55	ETH	 Ethiopia 
+56	FIN	 Finland 
+57	FJI	 Fiji 
+58	FRA	 France
+59	FSM	" Micronesia, Fed. Sts. "
+61	GBR	 United Kingdom 
+64	GHA	 Ghana
+65	GIN	 Guinea 
+66	GMB	" Gambia, The "
+67	GNB	 Guinea-Bissau 
+69	GRC	 Greece 
+70	GRD	 Grenada 
+71	GTM	 Guatemala  
+72	GUY	 Guyana 
+73	HKG	 Hong Kong 
+74	HND	 Honduras 
+76	HTI	 Haiti 
+77	HUN	 Hungary 
+78	IDN	 Indonesia 
+79	IND	 India 
+80	IRL	 Ireland 
+81	IRN	 Iran 
+82	IRQ	 Iraq 
+83	ISL	 Iceland 
+84	ISR	 Israel 
+85	ITA	 Italy
+86	JAM	 Jamaica 
+87	JOR	 Jordan 
+88	JPN	 Japan 
+90	KEN	 Kenya 
+92	KHM	 Cambodia 
+93	KIR	 Kiribati 
+94	KNA	 St. Kitts \ Nevis
+95	KOR	" Korea, Republic of"
+97	LAO	 Laos
+98	LBN	 Lebanon
+99	LBR	 Liberia
+101	LCA	 St. Lucia
+102	LKA	 Sri Lanka
+103	LSO	 Lesotho
+105	LUX	 Luxembourg
+107	MAC	 Macao
+108	MAR	 Morocco
+110	MDG	 Madagascar
+111	MDV	 Maldives
+112	MEX	 Mexico
+113	MHL	 Marshall Islands
+115	MLI	 Mali
+116	MLT	 Malta
+118	MNG	 Mongolia
+119	MOZ	 Mozambique
+120	MRT	 Mauritania
+121	MUS	 Mauritius
+122	MWI	 Malawi
+123	MYS	 Malaysia
+124	NAM	 Namibia
+125	NER	 Niger
+126	NGA	 Nigeria
+127	NIC	 Nicaragua
+128	NLD	 Netherlands
+129	NOR	 Norway
+130	NPL	 Nepal
+131	NZL	 New Zealand
+132	OMN	 Oman
+133	PAK	 Pakistan
+134	PAN	 Panama
+135	PER	 Peru
+136	PHL	 Philippines
+137	PLW	 Palau
+138	PNG	 Papua New Guinea
+139	POL	 Poland
+140	PRI	 Puerto Rico
+141	PRT	 Portugal
+142	PRY	 Paraguay
+144	ROM	 Republic of Moldova
+146	RWA	 Rwanda
+148	SDN	 Sudan
+149	SEN	 Senegal
+150	SGP	 Singapore
+151	SLB	 Solomon Islands
+152	SLE	 Sierra Leone
+153	SLV	 El Salvador
+154	SOM	 Somalia
+156	STP	 Sao Tome and Principe
+160	SWE	 Sweden
+161	SWZ	 Swaziland
+162	SYC	 Seychelles
+163	SYR	 Syria
+164	TCD	 Chad
+165	TGO	 Togo  
+166	THA	 Thailand
+170	TON	 Tonga
+172	TUN	 Tunisia
+173	TUR	 Turkey
+174	TWN	 Taiwan
+175	TZA	 Tanzania
+176	UGA	 Uganda
+178	URY	 Uruguay
+179	USA	 United States
+181	VCT	 St.Vincent \Grenadines
+182	VEN	 Venezuela
+183	VNM	 Vietnam
+184	VUT	 Vanuatu
+185	WSM	 Samoa
+187	ZAF	 South Africa
+189	ZMB	 Zambia
+190	ZWE	 Zimbabwe
