@@ -19,6 +19,9 @@ gdp_data_transposed <- t(gdp_data)
 colnames(gdp_data_transposed) <- gdp_data_transposed[1,]
 # Remove the first row
 gdp_data_transposed <- gdp_data_transposed[-1,]
+## Remove last row as it is NA'S
+gdp_data_transposed[nrow(gdp_data_transposed),]
+gdp_data_transposed <- gdp_data_transposed[-nrow(gdp_data_transposed),]  #This step is worrysome, as the assignment says it has 160 countries
 # Convert to a data frame
 gdp_data_transposed <- as.data.frame(gdp_data_transposed)
 # Convert columns to numeric (excluding the first column if it's non-numeric)
@@ -29,11 +32,13 @@ signedLog <- function(x) {
   sign(x) * log1p(abs(x))
 }
 gdp_data_log <- gdp_data_transposed
-gdp_data_log[, -1] <- apply(gdp_data_transposed[, -1], 2, signedLog)
+##gdp_data_log[, -1] <- apply(gdp_data_transposed[, -1], 2, signedLog) #why skip first row?
+gdp_data_log <- apply(gdp_data_transposed[, -1], 2, signedLog)
 
 
 # Convert all columns (except the first) to numeric explicitly
-for (col in 2:ncol(gdp_data_log)) {
+## I changed this to include the first
+for (col in 1:ncol(gdp_data_log)) {
   gdp_data_log[[col]] <- as.numeric(gdp_data_log[[col]])
 }
 # Initialize the distance matrix
@@ -57,7 +62,7 @@ for (i in 1:n_countries) {
   }
 }
 
-
+distance_matrix[is.na(distance_matrix)] <- 0
 # WARNING: BROKEN AFTER THIS POINT. WORK IN PROGRESS. 
 # Just testing stuff, might just delete stuff below here and restart. 
 
