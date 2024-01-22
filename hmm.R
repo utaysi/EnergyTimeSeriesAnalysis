@@ -56,7 +56,7 @@ PDEscatter(train_thresholded2$Price,train_thresholded2$Volume)
 #################################################################################################
 #Probably need to make the TS stationary here, I'm not 100% sure
 #################################################################################################
-train$Price_smoothed <- stats::filter(train$Price, rep(1/32, 32), sides = 2)
+train$Price_smoothed <- stats::filter(train$Price, rep(1/64, 64), sides = 2)
 ggplot(train, aes(x = Time, y = Price_smoothed)) + 
   geom_line(color = "blue") +
   ggtitle("smoothed price") +
@@ -94,7 +94,15 @@ HMMmeans
 
 VitPath <- viterbi(HMMmodel, RelDiffPercent)
 HMMcls <- VitPath$states # the predicted classes of the HMM
-train$HMMcls <- HMMcls
+
+# Calculate the number of NaNs needed
+num_nans <- nrow(train) - length(HMMcls)
+
+split_nans <- round(num_nans / 2)
+HMMcls_padded <- c(rep(0, split_nans), HMMcls, rep(0, num_nans - split_nans))
+
+
+train$HMMcls <- HMMcls_padded
 head(HMMcls)
 HMMGraphicDiag(VitPath, HMMmodel, RelDiffPercent)
 HMMPlotSerie(RelDiffPercent, VitPath)
@@ -110,6 +118,20 @@ fig <- fig %>% layout(title = 'Scatter plot of Price vs Volume',
 
 # Show the plot
 fig
+length(train$Time)
+length(train$HMMcls)
+length(train$RelDiffPercent)
+DataVisualizations::Classplot(
+  as.numeric(train$Time),
+  train$RelDiffPercent, Cls = train$HMMcls,
+  main = 'RR  of Smoothed Sunspots')
+DataVisualizations::Classplot(   
+  as.numeric(train$Time),
+  train$Price,
+  Cls = train$HMMcls,
+  main = 'Smoothed Sunspots')
+
+
 
 ######################################################################################################
 #testing
